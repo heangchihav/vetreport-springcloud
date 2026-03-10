@@ -214,6 +214,48 @@ export const MENU_SECTIONS: MenuSection[] = [
         path: "/branchreport-service/area-branch",
         menuNumber: "1",
       },
+      {
+        id: "branchreport-products",
+        label: "Products",
+        description: "Manage product catalog and inventory",
+        path: "/branchreport-service/products",
+        menuNumber: "2",
+      },
+      {
+        id: "branchreport-manage-users",
+        label: "Manage Users",
+        description: "Manage branch report service users and assignments",
+        path: "/branchreport-service/users",
+        menuNumber: "3",
+      },
+    ],
+  },
+  {
+    id: "region-service",
+    label: "Region Service",
+    description: "Regional area and branch management",
+    items: [
+      {
+        id: "region-areas",
+        label: "Areas",
+        description: "Manage regional areas",
+        path: "/region-service/areas",
+        menuNumber: "1",
+      },
+      {
+        id: "region-subareas",
+        label: "Sub Areas",
+        description: "Manage sub areas within regions",
+        path: "/region-service/subareas",
+        menuNumber: "2",
+      },
+      {
+        id: "region-branches",
+        label: "Branches",
+        description: "Manage branch locations",
+        path: "/region-service/branches",
+        menuNumber: "3",
+      },
     ],
   },
   {

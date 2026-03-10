@@ -37,6 +37,12 @@ spring:
             - PreserveHostHeader
           predicates:
             - Path=/api/branchreport/**
+        - id: region-service
+          uri: ${REGION_SERVICE_URL:http://demo-region-service:8086}
+          filters:
+            - PreserveHostHeader
+          predicates:
+            - Path=/api/region/**
       globalcors:
         add-to-simple-url-handler-mapping: true
         corsConfigurations:
@@ -66,3 +72,8 @@ management:
     web:
       exposure:
         include: health,prometheus,gateway
+
+logging:
+  level:
+    '[com.example.gateway.security]': DEBUG
+    '[org.springframework.cloud.gateway]': DEBUG

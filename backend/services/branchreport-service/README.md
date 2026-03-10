@@ -1,96 +1,179 @@
 # Branch Report Service
 
-A Rust Actix Web microservice for managing branch sales reports.
+A Spring Boot microservice for managing products and product types with full CRUD operations. This service is designed to handle box selling scenarios where products have multiple types (sizes) with different prices.
 
-## Overview
+## Features
 
-This service provides REST APIs for:
-- Creating branch sales reports
-- Retrieving reports by branch
-- Listing all reports
-- Health checks for monitoring
+### Product Management
+- Create, Read, Update, Delete products
+- Product categories and SKU management
+- Active/inactive status tracking
+- Search and filtering capabilities
+- Pagination support
+
+### Product Type Management
+- Multiple types per product (e.g., Size A, Size B)
+- Individual pricing per type
+- Stock management with low stock alerts
+- Cost price tracking
+- Weight and dimensions support
+- Size code management
+
+### Advanced Features
+- Low stock monitoring
+- Price range filtering
+- Comprehensive search functionality
+- Validation and error handling
+- RESTful API design
+- PostgreSQL database integration
 
 ## API Endpoints
 
-### Health Checks
-- `GET /health` - Basic health check
-- `GET /actuator/health` - Spring Boot compatible health check
+### Products
+- `GET /api/products` - Get all products (paginated)
+- `GET /api/products/{id}` - Get product by ID
+- `POST /api/products` - Create new product
+- `PUT /api/products/{id}` - Update product
+- `DELETE /api/products/{id}` - Delete product
+- `PATCH /api/products/{id}/deactivate` - Deactivate product
+- `GET /api/products/search` - Search products
+- `GET /api/products/category/{category}` - Get products by category
+- `GET /api/products/categories` - Get all active categories
 
-### Branch Reports
-- `GET /api/branch-reports/reports` - List all reports
-- `GET /api/branch-reports/reports/branch/{branch_id}` - Get reports by branch
-- `POST /api/branch-reports/reports` - Create a new report
+### Product Types
+- `GET /api/product-types` - Get all product types (paginated)
+- `GET /api/product-types/{id}` - Get product type by ID
+- `POST /api/product-types?productId={id}` - Create new product type
+- `PUT /api/product-types/{id}` - Update product type
+- `DELETE /api/product-types/{id}` - Delete product type
+- `PATCH /api/product-types/{id}/deactivate` - Deactivate product type
+- `GET /api/product-types/product/{productId}` - Get types by product
+- `GET /api/product-types/product/{productId}/active` - Get active types by product
+- `GET /api/product-types/product/{productId}/search` - Search product types
+- `GET /api/product-types/price-range` - Get types by price range
+- `GET /api/product-types/low-stock` - Get low stock items
+- `PATCH /api/product-types/{id}/stock` - Update stock quantity
+- `PATCH /api/product-types/{id}/stock/adjust` - Adjust stock quantity
 
-## Data Model
-
-```rust
-struct BranchReport {
-    id: Uuid,
-    branch_id: i32,
-    report_date: DateTime<Utc>,
-    total_sales: f64,
-    total_orders: i32,
-    created_at: DateTime<Utc>,
-}
-```
-
-## Environment Variables
-
-- `DATABASE_URL` - PostgreSQL connection string
-- `PORT` - Service port (default: 8085)
+### System
+- `GET /api/health` - Health check
+- `GET /api/info` - Service information
 
 ## Database Schema
 
-```sql
-CREATE TABLE branch_reports (
-    id UUID PRIMARY KEY,
-    branch_id INTEGER NOT NULL,
-    report_date TIMESTAMP WITH TIME ZONE NOT NULL,
-    total_sales DECIMAL(10,2) NOT NULL,
-    total_orders INTEGER NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+### Products Table
+- `id` - Primary key
+- `name` - Product name (required)
+- `description` - Product description
+- `category` - Product category (required)
+- `sku` - Unique SKU
+- `active` - Active status
+- `created_at` - Creation timestamp
+- `updated_at` - Last update timestamp
 
-CREATE INDEX idx_branch_reports_branch_id ON branch_reports(branch_id);
-CREATE INDEX idx_branch_reports_date ON branch_reports(report_date);
+### Product Types Table
+- `id` - Primary key
+- `name` - Type name (required)
+- `size_code` - Size identifier
+- `dimensions` - Physical dimensions
+- `price` - Selling price (required, > 0)
+- `cost_price` - Cost price
+- `weight` - Weight
+- `stock_quantity` - Current stock
+- `min_stock_level` - Minimum stock threshold
+- `active` - Active status
+- `product_id` - Foreign key to products
+- `created_at` - Creation timestamp
+- `updated_at` - Last update timestamp
+
+## Configuration
+
+### Application Properties
+- Server port: 8083
+- Database: PostgreSQL
+- JPA/Hibernate with DDL auto-update
+- Actuator endpoints enabled
+
+### Database Setup
+```sql
+CREATE DATABASE branchreport_db;
 ```
 
-## Development
+## Running the Service
 
 ### Prerequisites
-- Rust 1.75+
+- Java 17+
+- Maven 3.6+
 - PostgreSQL 12+
 
-### Running Locally
-
+### Build and Run
 ```bash
-# Set environment variables
-export DATABASE_URL="postgres://postgres:postgres@localhost:5432/branchreport_service_db"
-export PORT=8085
-
-# Run the service
-cargo run
+mvn clean install
+mvn spring-boot:run
 ```
 
-### Building Docker Image
-
+### Docker Support
 ```bash
 docker build -t branchreport-service .
+docker run -p 8083:8083 branchreport-service
 ```
 
-## Integration
+## Usage Examples
 
-This service integrates with the existing microservices architecture:
+### Create a Product
+```json
+POST /api/products
+{
+  "name": "Shipping Box",
+  "description": "Standard shipping box",
+  "category": "Packaging",
+  "sku": "BOX-001",
+  "active": true,
+  "productTypes": [
+    {
+      "name": "Small",
+      "sizeCode": "S",
+      "dimensions": "10x8x6 inches",
+      "price": 5.99,
+      "costPrice": 3.50,
+      "stockQuantity": 100,
+      "minStockLevel": 10
+    },
+    {
+      "name": "Medium",
+      "sizeCode": "M", 
+      "dimensions": "15x12x10 inches",
+      "price": 9.99,
+      "costPrice": 6.00,
+      "stockQuantity": 50,
+      "minStockLevel": 5
+    }
+  ]
+}
+```
 
-- **Gateway**: Routes `/api/branch-reports/**` to this service
-- **Database**: Uses dedicated `branchreport_service_db` PostgreSQL database
-- **Monitoring**: Provides health endpoints for Kubernetes probes
-- **Authentication**: Receives user context headers from gateway
+### Update Stock
+```bash
+PATCH /api/product-types/1/stock?quantity=150
+```
 
-## Deployment
+### Adjust Stock
+```bash
+PATCH /api/product-types/1/stock/adjust?adjustment=-10
+```
 
-The service is deployed alongside other microservices via:
-- Docker Compose (development)
-- Kubernetes (production)
+## Error Handling
 
-See the main project README for deployment instructions.
+The service provides comprehensive error handling with:
+- Validation errors (400)
+- Not found errors (404)
+- Conflict errors (409)
+- Internal server errors (500)
+
+All errors include detailed messages and timestamps.
+
+## Monitoring
+
+- Health check endpoint: `/api/health`
+- Actuator metrics: `/actuator/metrics`
+- Prometheus metrics: `/actuator/prometheus`

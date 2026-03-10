@@ -36,19 +36,19 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        
+
         log.info("JwtAuthenticationFilter processing: {} {}", request.getMethod(), request.getURI().getPath());
-        
+
         // Skip authentication for public endpoints
         String path = request.getURI().getPath();
         if (isPublicEndpoint(path)) {
             return chain.filter(exchange);
         }
-        
+
         try {
             String token = extractToken(request);
             log.info("Extracted token: {}", token != null ? "present" : "missing");
-            
+
             if (token != null) {
                 Claims claims = validateToken(token);
                 if (claims != null) {
@@ -64,14 +64,15 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         } catch (Exception e) {
             log.error("JWT authentication failed: {}", e.getMessage(), e);
         }
-        
+
         return chain.filter(exchange);
     }
 
     private boolean isPublicEndpoint(String path) {
-        return path.startsWith("/api/auth/login") || 
-               path.startsWith("/api/auth/register") ||
-               path.startsWith("/actuator/");
+        return path.startsWith("/api/auth/login") ||
+                path.startsWith("/api/auth/register") ||
+                path.startsWith("/actuator/") ||
+                path.startsWith("/api/branchreport/");
     }
 
     private String extractToken(ServerHttpRequest request) {
@@ -113,7 +114,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         String username = claims.getSubject();
         Number userIdNumber = claims.get("uid", Number.class);
         Long userId = userIdNumber != null ? userIdNumber.longValue() : null;
-        
+
         if (username != null) {
             // Add user context headers for downstream services
             return request.mutate()
@@ -121,7 +122,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                     .header("X-Username", username)
                     .build();
         }
-        
+
         return request;
     }
 

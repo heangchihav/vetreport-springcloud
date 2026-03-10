@@ -1,174 +1,237 @@
 # Region Service
 
-A professional Rust-based microservice for managing geographical regions, sub-areas, and branches.
+A Spring Boot microservice for managing geographical regions, areas, sub-areas, and branches.
 
-## Architecture
+## Overview
 
-This service follows a clean, layered architecture pattern:
-
-```
-src/
-├── config/           # Configuration management
-├── db/               # Database layer
-│   ├── connection.rs    # Database connection handling
-│   ├── migrations.rs   # Database schema migrations
-│   ├── queries.rs      # Database query operations
-│   └── mod.rs          # Module exports
-├── errors/           # Error handling and types
-├── handlers/         # HTTP request handlers
-├── models/           # Data models and structs
-├── routes/           # API route configuration
-├── services/         # Business logic layer
-│   ├── area_service.rs     # Area business logic
-│   ├── subarea_service.rs  # Sub-area business logic
-│   ├── branch_service.rs    # Branch business logic
-│   └── mod.rs             # Module exports
-├── utils/            # Utility functions
-│   ├── response.rs        # API response helpers
-│   └── mod.rs             # Module exports
-└── main.rs           # Application entry point
-```
+This service provides REST APIs for managing hierarchical geographical data:
+- **Areas**: Top-level geographical regions
+- **Sub-areas**: Subdivisions within areas  
+- **Branches**: Specific locations within sub-areas
 
 ## Features
 
-- **Clean Architecture**: Separation of concerns with distinct layers
-- **Error Handling**: Comprehensive error types and HTTP response mapping
-- **Database Migrations**: Automatic schema creation and updates
-- **Validation**: Input validation at service layer
-- **Logging**: Structured logging with appropriate levels
-- **API Documentation**: RESTful API with consistent response format
+- Full CRUD operations for areas, sub-areas, and branches
+- Hierarchical data retrieval with nested relationships
+- RESTful API with proper HTTP status codes
+- JPA entities with PostgreSQL database
+- Flyway database migrations
+- Docker support with multi-stage builds
+- Health check endpoints
+- Comprehensive error handling
 
 ## API Endpoints
 
-### Health Check
+### Health Checks
 - `GET /api/region/health` - Basic health check
-- `GET /api/region/actuator/health` - Spring Boot compatible health check
+- `GET /api/region/actuator/health` - Actuator health check
 
 ### Areas
 - `GET /api/region/areas` - List all areas
-- `GET /api/region/areas/{id}` - Get specific area
 - `POST /api/region/areas` - Create new area
+- `GET /api/region/areas/{id}` - Get area by ID
 - `PUT /api/region/areas/{id}` - Update area
 - `DELETE /api/region/areas/{id}` - Delete area
+- `GET /api/region/areas/hierarchy` - Get areas with nested sub-areas and branches
 
 ### Sub-Areas
 - `GET /api/region/sub-areas` - List all sub-areas
-- `GET /api/region/sub-areas/{id}` - Get specific sub-area
 - `POST /api/region/sub-areas` - Create new sub-area
+- `GET /api/region/sub-areas/{id}` - Get sub-area by ID
 - `PUT /api/region/sub-areas/{id}` - Update sub-area
 - `DELETE /api/region/sub-areas/{id}` - Delete sub-area
 
 ### Branches
 - `GET /api/region/branches` - List all branches
-- `GET /api/region/branches/{id}` - Get specific branch
 - `POST /api/region/branches` - Create new branch
+- `GET /api/region/branches/{id}` - Get branch by ID
 - `PUT /api/region/branches/{id}` - Update branch
 - `DELETE /api/region/branches/{id}` - Delete branch
 
+## Data Model
+
+```json
+{
+  "area": {
+    "id": "uuid",
+    "name": "string",
+    "description": "string|null",
+    "createdAt": "datetime",
+    "updatedAt": "datetime"
+  },
+  "subArea": {
+    "id": "uuid",
+    "name": "string", 
+    "description": "string|null",
+    "areaId": "uuid",
+    "createdAt": "datetime",
+    "updatedAt": "datetime"
+  },
+  "branch": {
+    "id": "uuid",
+    "name": "string",
+    "description": "string|null", 
+    "areaId": "uuid",
+    "subAreaId": "uuid",
+    "createdAt": "datetime",
+    "updatedAt": "datetime"
+  }
+}
+```
+
 ## Configuration
 
-The service uses environment variables for configuration:
+### Environment Variables
 
-- `SERVER_HOST`: Server host (default: 0.0.0.0)
-- `SERVER_PORT`: Server port (default: 8086)
-- `DATABASE_URL`: PostgreSQL connection URL
-- `RUST_LOG`: Logging level (default: info)
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SERVER_HOST` | `0.0.0.0` | Server bind address |
+| `SERVER_PORT` | `8086` | Server port |
+| `DATABASE_URL` | `jdbc:postgresql://localhost:5432/region_service_db` | PostgreSQL JDBC URL |
+| `DATABASE_USERNAME` | `postgres` | Database username |
+| `DATABASE_PASSWORD` | `postgres` | Database password |
+| `SHOW_SQL` | `false` | Enable SQL logging |
 
-## Database Schema
+### Database Setup
 
-The service manages three main entities:
+Create a PostgreSQL database:
 
-1. **Areas**: Top-level geographical regions
-2. **Sub-Areas**: Sub-divisions within areas
-3. **Branches**: Physical locations within sub-areas
+```sql
+CREATE DATABASE region_service_db;
+```
 
-All entities include:
-- UUID-based primary keys
-- Created and updated timestamps
-- Proper foreign key relationships
-- Optimized indexes for performance
+The application will automatically create tables using Hibernate and manage migrations with Flyway.
 
 ## Development
 
 ### Prerequisites
-- Rust 1.88+
+- Java 17+
+- Maven 3.6+
 - PostgreSQL 12+
-- Docker (optional)
 
 ### Running Locally
+
+1. Copy environment configuration:
 ```bash
-# Set environment variables
-export DATABASE_URL="postgres://user:password@localhost:5432/region_service_db"
-export SERVER_PORT=8086
-
-# Run the service
-cargo run
+cp .env.example .env
 ```
 
-### Running with Docker
+2. Update `.env` with your database settings
+
+3. Run the application:
 ```bash
-# Build and run
-docker compose up --build region-service
-
-# Or run full stack
-docker compose up --build
+mvn spring-boot:run
 ```
 
-## Response Format
+The service will be available at `http://localhost:8086`
 
-All API responses follow a consistent format:
+### Building
 
-```json
-{
-  "success": true,
-  "data": { ... },
-  "message": "Operation completed successfully"
-}
+```bash
+mvn clean package
 ```
 
-Error responses:
-```json
-{
-  "success": false,
-  "message": "Error description"
-}
+### Running Tests
+
+```bash
+mvn test
+```
+
+## Docker
+
+### Build Image
+
+```bash
+docker build -t region-service .
+```
+
+### Run Container
+
+```bash
+docker run -p 8086:8086 \
+  -e DATABASE_URL=jdbc:postgresql://host.docker.internal:5432/region_service_db \
+  -e DATABASE_USERNAME=postgres \
+  -e DATABASE_PASSWORD=postgres \
+  region-service
+```
+
+### Using Docker Compose
+
+```yaml
+version: '3.8'
+services:
+  region-service:
+    build: .
+    ports:
+      - "8086:8086"
+    environment:
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/region_service_db
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=postgres
+    depends_on:
+      - postgres
+  
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=region_service_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
 ```
 
 ## Error Handling
 
-The service includes comprehensive error handling:
+The service returns appropriate HTTP status codes:
 
-- **ValidationError**: Input validation failures (400 Bad Request)
-- **DatabaseError**: Database operation failures (500 Internal Server Error)
-- **NotFound**: Resource not found (404 Not Found)
-- **InternalError**: Unexpected internal errors (500 Internal Server Error)
+- `200 OK` - Successful request
+- `201 Created` - Resource created successfully
+- `204 No Content` - Resource deleted successfully
+- `400 Bad Request` - Invalid request data
+- `404 Not Found` - Resource not found
+- `409 Conflict` - Resource already exists
+- `500 Internal Server Error` - Server error
 
-## Logging
+Error responses include a descriptive message:
 
-Structured logging includes:
-- Service startup information
-- Database connection status
-- Request/response logging
-- Error details with context
+```json
+{
+  "message": "Area not found with id: 12345678-1234-1234-1234-123456789012"
+}
+```
 
-## Security
+## Monitoring
 
-- Input validation at service layer
-- SQL injection prevention through parameterized queries
-- Proper error message sanitization
-- CORS configuration through gateway
+### Health Endpoints
 
-## Performance
+- `/api/region/health` - Simple health check
+- `/actuator/health` - Spring Boot Actuator health
+- `/actuator/info` - Application information
+- `/actuator/metrics` - Application metrics
 
-- Database connection pooling
-- Optimized queries with proper indexing
-- Efficient JSON serialization
-- Minimal memory footprint
+### Logging
 
-## Testing
+Configure logging levels in `application.yml` or environment variables:
 
-The service structure supports comprehensive testing:
-- Unit tests for business logic
-- Integration tests for API endpoints
-- Database migration tests
-- Error handling tests
+```yaml
+logging:
+  level:
+    com.platform.regionservice: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+```
+
+## Migration from Rust Version
+
+This Spring Boot version provides equivalent functionality to the original Rust Actix Web implementation:
+
+- Same API endpoints and response formats
+- Same database schema (auto-generated by Hibernate)
+- Same port (8086) and configuration options
+- Enhanced with Spring Boot features (actuator, validation, etc.)
+
+The migration maintains backward compatibility while adding enterprise-grade features.
