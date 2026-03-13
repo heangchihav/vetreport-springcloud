@@ -1,4 +1,4 @@
-package com.example.branchreportservice.controller;
+package com.example.branchreportservice.api.user;
 
 import com.example.branchreportservice.service.shared.BranchReportServiceIdProvider;
 import org.slf4j.Logger;

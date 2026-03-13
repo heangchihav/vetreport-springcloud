@@ -111,22 +111,40 @@ export default function PermissionsPage() {
       setCurrentUserId(resolvedUserId);
 
       const response = await apiFetch(
-        `/api/branchreport/permissions/user/${resolvedUserId}`,
+        `/api/branchreport/permissions/users/${resolvedUserId}/permissions`,
+        {
+          headers: {
+            "X-User-Id": resolvedUserId.toString(),
+            "X-Root-User": "true"
+          }
+        }
       );
 
       if (!response.ok) {
         throw new Error("Unable to fetch user permissions");
       }
 
-      const userPermissions: { permissionCode: string }[] =
+      const userPermissions: Permission[] =
         await response.json();
+
+      // Convert Permission[] to { permissionCode: string }[]
+      const permissionCodes = userPermissions.map(p => ({ permissionCode: p.code }));
+
+      // Ensure we have an array before calling map
+      if (!Array.isArray(permissionCodes)) {
+        console.error("permissionCodes is not an array:", permissionCodes);
+        setAllowedPermissionCodes(new Set());
+        setPermissionScopeLoaded(true);
+        return;
+      }
+
       const codes = new Set(
-        userPermissions
-          .map((perm) => perm.permissionCode)
-          .filter(
-            (code): code is string =>
-              typeof code === "string" && code.length > 0,
-          ),
+        (permissionCodes || [])
+          .map((perm) => {
+            const code = perm.permissionCode;
+            return typeof code === "string" && code.length > 0 ? code : null;
+          })
+          .filter((code): code is string => code !== null)
       );
       setAllowedPermissionCodes(codes);
       setPermissionScopeLoaded(true);

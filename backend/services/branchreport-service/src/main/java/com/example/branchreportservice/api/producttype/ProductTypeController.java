@@ -1,4 +1,4 @@
-package com.example.branchreportservice.controller;
+package com.example.branchreportservice.api.producttype;
 
 import com.example.branchreportservice.dto.ProductTypeRequest;
 import com.example.branchreportservice.dto.ProductTypeResponse;

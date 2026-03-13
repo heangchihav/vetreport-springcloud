@@ -169,14 +169,6 @@ class BranchreportPermissionsService {
             throw new Error(`Failed to remove users from role: ${response.status}`);
         }
     }
-
-    // User permissions for current user
-    async getUserPermissions(userId: number): Promise<{ permissionCode: string }[]> {
-        const response = await apiFetch(`/api/branchreport/permissions/user/${userId}`, {
-            headers: this.getAuthHeaders(),
-        });
-        return this.handleResponse<{ permissionCode: string }[]>(response);
-    }
 }
 
 export const branchreportPermissionsService = new BranchreportPermissionsService();

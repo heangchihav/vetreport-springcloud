@@ -1,4 +1,4 @@
-package com.example.branchreportservice.controller;
+package com.example.branchreportservice.api.product;
 
 import com.example.branchreportservice.dto.ProductRequest;
 import com.example.branchreportservice.dto.ProductResponse;
@@ -53,9 +53,6 @@ public class ProductController {
         List<ProductResponse> response = productService.searchProducts(search, active);
         return ResponseEntity.ok(response);
     }
-
-
-
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {

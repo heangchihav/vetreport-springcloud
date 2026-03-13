@@ -1,4 +1,4 @@
-package com.example.branchreportservice.controller;
+package com.example.branchreportservice.api.root;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

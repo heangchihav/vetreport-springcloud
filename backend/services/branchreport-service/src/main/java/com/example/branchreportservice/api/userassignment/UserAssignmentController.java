@@ -1,4 +1,4 @@
-package com.example.branchreportservice.controller;
+package com.example.branchreportservice.api.userassignment;
 
 import com.example.branchreportservice.dto.CreateUserAssignmentRequest;
 import com.example.branchreportservice.dto.UpdateUserAssignmentRequest;
